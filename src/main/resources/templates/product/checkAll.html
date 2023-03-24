@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns: th="https://www.thymeleaf.org" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>전체조회</title>
+</head>
+<body>
+<div>
+  <h1>전체조회</h1>
+  <hr>
+</div>
+  <table>
+    <thead>
+    <tr>
+      <th>ID</th>
+      <th>상품명</th>
+      <th>수량</th>
+      <th>가격</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="product : ${products}">
+      <td th:text="${product.pid}">ID</td>
+      <td>
+        <a href="" th:href="@{/products/{id}/check (id=${product.pid})}" th:text="${product.pname}">상품명</a>
+      </td>
+      <td th:text="${product.quantity}">수량</td>
+      <td th:text="${product.price}">가격</td>
+    </tr>
+    </tbody>
+  </table>
+<div>
+  <button id="btnAdd">등록</button>
+</div>
+<script>
+  const $btnAdd = document.getElementById('btnAdd');
+  //location.href = html의 <a href="">태그와 같은 역할을 한다.
+  const btnAdd_h = e => globalThis.location.href= 'products/add';
+  $btnAdd.addEventListener('click',btnAdd_h, false);
+</script>
+</body>
+</html>

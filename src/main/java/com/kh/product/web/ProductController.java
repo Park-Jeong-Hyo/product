@@ -1,0 +1,147 @@
+package com.kh.product.web;
+
+import com.kh.product.dao.Product;
+import com.kh.product.svc.ProductSVC;
+import com.kh.product.web.form.CheckForm;
+import com.kh.product.web.form.EnrollForm;
+import com.kh.product.web.form.UpdateForm;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
+import java.util.Optional;
+
+@Slf4j
+@Controller
+@RequiredArgsConstructor
+@RequestMapping("/products")
+public class ProductController {
+  private final ProductSVC productSVC;
+
+  //등록 양식
+  @GetMapping("/add")
+  public String enrollForm(Model model) {
+    // view단에 보내는 속성를 넣을 객체 enrollForm
+    EnrollForm enrollForm = new EnrollForm();
+    // 속성을 model 객체에 넣어서 view에 전달
+    // enrollForm.html에서 thymeleaf를 사용(th:object...), view와 controller를 연결
+    model.addAttribute("enrollForm", enrollForm);
+    return "product/enrollForm";
+  }
+  //등록
+  @PostMapping("/add")
+  public String save(
+      // valid: 유효성 검사
+      // modelAttribut 요청 데이터를 자바 객체로 바인딩, 모델 객체에 추가
+      // 타임리프에 th:object로 view와 컨트롤러가 연결되었고, 매개변수에
+      // 요청 데이터가 들어와서, 그걸 자바객체에 바인딩, 모델객체에 추가함.
+      @Valid @ModelAttribute EnrollForm enrollForm,
+      // 유효성 검사 결과를 담는 객체
+      BindingResult bindingResult,
+      //등록결과 나온 id를 url주소의 id값에 넣어서 리다이렉트 하기 위함
+      RedirectAttributes redirectAttributes
+  ) {
+    //검증
+    // validation 어노테이션기반 검증
+    if(bindingResult.hasErrors()) {
+      log.info("bindingResult={}", bindingResult);
+      return "product/enrollForm";
+    }
+    //등록
+    Product product = new Product();
+    product.setPname(enrollForm.getPname());
+    product.setQuantity(enrollForm.getQuantity());
+    product.setPrice(enrollForm.getPrice());
+
+    //SVC에 전달
+    Long enrolledPid = productSVC.enroll(product);
+
+    //id를 경로 url에 전달하기 위해
+    redirectAttributes.addAttribute("id", enrolledPid);
+    return "redirect:/products/{id}/check";
+  }
+  //조회
+  @GetMapping("/{id}/check")
+  public String checkById(
+      //{id}부분을 매개변수로 사용하겠다는 선언
+      @PathVariable("id") Long id,
+      Model model
+  ) {
+    // 조회 결과가 없을 경우 예외 처리를 간단하게 하기 위한 Optional 클래스
+    // id값을 SVC에 전달, 전달 결과를 foundProduct에 대입
+    Optional<Product> foundProduct = productSVC.checkById(id);
+    // id값으로 조회한 결과 값이 null 일 경우 예외를 발생시킨다.
+    Product product = foundProduct.orElseThrow();
+
+    CheckForm checkForm = new CheckForm();
+    checkForm.setPid(product.getPid());
+    checkForm.setPname(product.getPname());
+    checkForm.setQuantity(product.getQuantity());
+    checkForm.setPrice(product.getPrice());
+    //view(checkform.html)에 th:object="${checkform}"의 형태로 전달하기 위함
+    model.addAttribute("checkForm", checkForm);
+    return "product/checkForm";
+  }
+  //수정양식
+  @GetMapping("/{id}/edit")
+  public String updateForm(
+      @PathVariable("id") Long id,
+      Model model
+  ) {
+    Optional<Product> foundProduct = productSVC.checkById(id);
+    Product product = foundProduct.orElseThrow();
+
+    UpdateForm updateForm = new UpdateForm();
+    updateForm.setPid(product.getPid());
+    updateForm.setPname(product.getPname());
+    updateForm.setQuantity(product.getQuantity());
+    updateForm.setPrice(product.getPrice());
+    model.addAttribute("updateForm",updateForm);
+    return "product/updateForm";
+  }
+  // 수정
+  @PostMapping("{id}/edit")
+  public String update(
+      @PathVariable("id") Long pid,
+      @ModelAttribute UpdateForm updateForm,
+      BindingResult bindingResult,
+      RedirectAttributes redirectAttributes
+      ) {
+    if(bindingResult.hasErrors()) {
+      log.info("bindingResult={}", bindingResult);
+      return "product/updateForm";
+    }
+
+    //수정처리
+    Product product = new Product();
+    product.setPid(pid);
+    product.setPname(updateForm.getPname());
+    product.setQuantity(updateForm.getQuantity());
+    product.setPrice(updateForm.getPrice());
+
+    redirectAttributes.addAttribute("id", pid);
+    return "redirect:/product/{id}/check";
+  }
+  // 삭제
+  @GetMapping("/{id}/del")
+  public String delete(
+      @PathVariable("id") Long pid
+  ) {
+    //컨트롤러에 id만 전달
+    productSVC.delete(pid);
+    return "redirect:/products";
+  }
+  @GetMapping
+  // 목록
+  public String checkAll(Model model) {
+    List<Product> products = productSVC.checkAll();
+    model.addAttribute("products", products);
+    return "product/checkAll";
+  }
+}

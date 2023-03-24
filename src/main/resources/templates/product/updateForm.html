@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns: th="https://www.thymeleaf.org" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>수정</title>
+</head>
+<body>
+  <h1>수정</h1>
+  <form action="" method="post" th:object="${updateForm}">
+    <div>
+      <label for="">상품번호</label>
+      <input type="text" th:field="*{pid}" readonly>
+    </div>
+    <div>
+      <label for="">상품명</label>
+      <input type="text" th:field="*{pname}">
+    </div>
+    <div>
+      <label for="">수량</label>
+      <input type="text" th:field="*{quantity}">
+    </div>
+    <div>
+      <label for="">가격</label>
+      <input type="text" th:field="*{price}">
+    </div>
+    <div>
+      <button>저장</button>
+      <button type="button" onclick="history.back()">취소</button>
+      <button type="button" onclick="globalThis.location.href = '/products'">목록</button>
+    </div>
+  </form>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns: th="https://www.thymeleaf.org" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>조회</title>
+</head>
+<body>
+<form action="" method="" th:object="${checkForm}">
+  <div>
+    <label for="">상품번호</label>
+    <input type="text" th:field="*{pid}" readonly>
+  </div>
+  <div>
+    <label for="">상품명</label>
+    <input type="text" th:field="*{pname}" readonly>
+  </div>
+  <div>
+    <label for="">수량</label>
+    <input type="text" th:field="*{quantity}" readonly>
+  </div>
+  <div>
+    <label for="">가격</label>
+    <input type="text" th:field="*{price}" readonly>
+  </div>
+  <button id="btnUpdate" type="button">수정</button>
+  <button id="btnDelete" type="button">삭제</button>
+  <button id="btnCheckAll" type="button">목록</button>
+</form>
+</div>
+<script>
+  const $btnUpdate = document.getElementById('btnUpdate');
+  const $btnCheckAll = document.getElementById('btnCheckAll');
+  const $btnDelete = document.getElementById('btnDelete');
+  const $pid = document.getElementById('pid');
+
+  const btnDelete_h = e => globalThis.location.href = `/products/${$pid.value}/del`;
+  const btnUpdate_h = e => globalThis.location.href = `/products/${$pid.value}/edit`;
+  const btnCheckAll = e => globalThis.location.href = `/products`;
+
+  $btnUpdate.addEventListener('click', btnUpdate_h, false);
+  $btnDelete.addEventListener('click', btnDelete_h, false);
+  $btnCheckAll.addEventListener('click', btnCheckAll_h, false);
+</script>
+</body>
+</html>
