@@ -12,6 +12,9 @@
   <form action="" method="post" th:object="${enrollForm}">
     <div>
       <!--field에 의해서 만들어 지는 id지정용 th:for{#ids.next()또는 previous()}-->
+      <!--label과 input을 연결시켜주어야 한다. 하지만 인풋 태그가 동적으로 생성될 경우(th:filed...)-->
+      <!--어떻게 연결시켜주어야 될지 감이 오질 않는다. 이럴 때 사용하는게 th:for"${#ids.prev또는 next('')이다-->
+      <!--input의 id와 label의 for을 맞춰서 서로 연결을 시키는 용도이다.-->
       <label for="" th:for="${#ids.next('pname')}">상품명</label>
       <!--th:field name, value id 생성, name과 id는 변수명과 같음-->
       <!--선택변수표현식 *{pname}={enrollForm.pname}-->

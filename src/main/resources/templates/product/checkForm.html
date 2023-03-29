@@ -35,7 +35,11 @@
   const $btnDelete = document.getElementById('btnDelete');
   const $pid = document.getElementById('pid');
 
-  const btnDelete_h = e => globalThis.location.href = `/products/${$pid.value}/del`;
+  const btnDelete_h = e => {
+    if(confirm('삭제하시겠습니까')) {
+        globalThis.location.href = `/products/${$pid.value}/del`;
+      }
+   }
   const btnUpdate_h = e => globalThis.location.href = `/products/${$pid.value}/edit`;
   const btnCheckAll = e => globalThis.location.href = `/products`;
 

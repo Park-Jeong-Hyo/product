@@ -26,10 +26,13 @@ public class ProductController {
 
   //등록 양식
   @GetMapping("/add")
+  // 빈(empty)객체를 생성하여 view에 전달, 렌더링 할 때 오류가 나지 않도록
+  // 아무 객체도 전달되지 않으면 view에 있는 타임리프 코드에서 오류가 발생한다.
   public String enrollForm(Model model) {
-    // view단에 보내는 속성를 넣을 객체 enrollForm
+    // view단에 보내는 속성을 넣을 객체 enrollForm
     EnrollForm enrollForm = new EnrollForm();
     // 속성을 model 객체에 넣어서 view에 전달
+    // 비어있기 때문에, 실질적으로 아무것도 전달하지 않는다. 연결을 목적으로 한다.
     // enrollForm.html에서 thymeleaf를 사용(th:object...), view와 controller를 연결
     model.addAttribute("enrollForm", enrollForm);
     return "product/enrollForm";
@@ -38,9 +41,11 @@ public class ProductController {
   @PostMapping("/add")
   public String save(
       // valid: 유효성 검사
-      // modelAttribut 요청 데이터를 자바 객체로 바인딩, 모델 객체에 추가
+      // modelAttribut 요청 데이터(사용자가 입력한)를 자바 객체로 바인딩, 모델 객체에 추가
       // 타임리프에 th:object로 view와 컨트롤러가 연결되었고, 매개변수에
       // 요청 데이터가 들어와서, 그걸 자바객체에 바인딩, 모델객체에 추가함.
+      // 이때 연결되는 건 th:object="${enrollForm}", 타입이 연결되는 것이고, 변수명은 해당하지 않는다.
+      // 사용자가 입력한 정보가 타임리프의 th:object.. 코드를 통해서 매개변수의 형태로 지금 전달이 된 것
       @Valid @ModelAttribute EnrollForm enrollForm,
       // 유효성 검사 결과를 담는 객체
       BindingResult bindingResult,
@@ -53,16 +58,41 @@ public class ProductController {
       log.info("bindingResult={}", bindingResult);
       return "product/enrollForm";
     }
+    //필드 오류
+    if(enrollForm.getQuantity() == 100) {
+      //오류필드명, 오류코드, 사용자 입력값
+      bindingResult.rejectValue("quantity", "product");
+    }
+    // 글로벌 오류
+    // 총액 (상품수량*단가) 1000만원 초과 금지
+    if(enrollForm.getQuantity() * enrollForm.getPrice() > 10_000_000L) {
+      //오브젝트 에러(오류코드, 사용자 입력값)
+      // errorCode,errorArgs: 오류메시지에서 {0}을 치환하기위한 값, defaultmessage
+      bindingResult.reject("totalprice", new String[]{"1000"}, "");
+    }
+
+    if(enrollForm.getQuantity() > 1 && enrollForm.getQuantity() < 10) {
+      bindingResult.reject("quantity", new String[]{"1", "2"}, "");
+    }
+
+    if(bindingResult.hasErrors()) {
+      log.info("bindingResult={}", bindingResult);
+      return "product/enrollForm";
+    }
+
     //등록
+    // DB에 전달할 product객체에 사용자가 입력하여 자바객체에 바인딩 된 enrollForm의 정보가 입력된다.
     Product product = new Product();
     product.setPname(enrollForm.getPname());
     product.setQuantity(enrollForm.getQuantity());
     product.setPrice(enrollForm.getPrice());
 
-    //SVC에 전달
+    //SVC에 전달,
+    //전달하고 나면 svc를 거쳐서 dao로 전달되고 로직이 처리가 되서 pid라는 것을 반환한다.
+    // pid라는 형태로 svc에 전달이 되고 다시 컨트롤러로 정보가 전달이 된다.
     Long enrolledPid = productSVC.enroll(product);
 
-    //id를 경로 url에 전달하기 위해
+    //id를 경로 url에 전달하기 위한 코드
     redirectAttributes.addAttribute("id", enrolledPid);
     return "redirect:/products/{id}/check";
   }
@@ -113,6 +143,11 @@ public class ProductController {
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes
       ) {
+    if(bindingResult.hasErrors()) {
+      log.info("bindingResult={}", bindingResult);
+      return "product/updateForm";
+    }
+    //데이터 검증
     if(bindingResult.hasErrors()) {
       log.info("bindingResult={}", bindingResult);
       return "product/updateForm";
