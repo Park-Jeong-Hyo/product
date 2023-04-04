@@ -37,4 +37,10 @@ public class ProductSVCImpl  implements ProductSVC{
   public List<Product> checkAll() {
     return productDAO.checkAll();
   }
+
+  @Override
+  public boolean isExist(Long pid) {
+    return productDAO.isExist(pid);
+  }
 }
+

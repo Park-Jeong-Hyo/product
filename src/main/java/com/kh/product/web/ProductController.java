@@ -122,6 +122,7 @@ public class ProductController {
   @GetMapping("/{id}/edit")
   public String updateForm(
       @PathVariable("id") Long id,
+      // 추측: 여기서 model은 ioc(inversion of control)
       Model model
   ) {
     Optional<Product> foundProduct = productSVC.checkById(id);

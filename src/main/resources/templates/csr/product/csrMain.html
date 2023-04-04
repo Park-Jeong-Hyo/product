@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSR 상품관리</title>
+  <style>
+    #productList .wrapper .header,
+    #productList .wrapper .body{
+      display: grid;
+      grid-template-columns: 100px 100px 100px 100px;
+      grid-auto-rows: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<div>
+  <form action="" >
+    <div>
+      <label for="pid">상품아이디</label>
+      <input type="text" id="pid" name="pid" size="10">
+      <button type="button" id="searchBtn">조회</button>
+    </div>
+    <div>
+      <label for="pname">상품명</label>
+      <input type="text" id="pname" name="pid">
+    </div>
+    <div>
+      <label for="quantity">수량</label>
+      <input type="text" id="quantity" name="quantity">
+    </div>
+    <div>
+      <label for="price">단가</label>
+      <input type="text" id="price" name="pid">
+    </div>
+    <div>
+      <button type=button id="enrollBtn">등록</button>
+    </div>
+    <div class="btns"></div>
+    <button type="button" id="modifyBtn">수정</button>
+    <button type="button" id="delBtn">삭제</button>
+  </form>
+</div>
+<div id="productList">
+  <h3>상품목록</h3>
+  <div><button id="listBtn">목록</button></div>
+  <div class="wrapper">
+    <div class="header">
+      <div>ID</div>
+      <div>상품명</div>
+      <div>수량</div>
+      <div>가격</div>
+    </div>
+    <div class="body"></div>
+  </div>
+</div>
+<script>
+// 필드 등록
+// 자동으로 document.query...등등의 처리를 해준다.
+  const $fields = { pid, pname, quantity, price };
+// 버튼 등록
+  const $btns = {
+    list: document.getElementById('listBtn'),
+    enroll: document.getElementById('enrollBtn'),
+    modify: document.getElementById('modifyBtn'),
+    del: document.getElementById('delBtn'),
+    search: document.getElementById('searchBtn'),
+  }
+// 목록
+  const makeRow = p =>
+  `<div>${p.pid}</div>` +
+  `<div>${p.pname}</div>` +
+  `<div>${p.quantity}</div>` +
+  `<div>${p.price}</div>`;
+
+  const list = res => {
+    //성공 '01'
+    if(res.header.code == '01') {
+      //data를 새로운 배열로 반환하는 작업
+      //data값으로 html을 만들고, 결과 값으로 나온 배열을 join을 통해서
+      //하나의 문자열로 만들어서 반환한 값이 const html이다.
+      const html = res.data.map(p => makeRow(p)).join('');
+      document.querySelector(`.wrapper .body`).innerHTML = html;
+      console.log('클릭');
+    } else {
+      throw new Error(`${res.header.message}`);
+    }
+  };
+
+  const list_h = e => {
+    const url = `http://localhost:9080/rest/`;
+    fetch(url, {
+      method: 'GET',
+      Headers: {
+        //json 타입을 받겠다는 뜻
+        Accept: 'application/json'
+      },
+    })
+  //json타입 의 응답을 js객체로 변화
+  .then(res => res.json())
+  .then(list)
+  .catch(err => console.error(err));
+  }
+  $btns.list.addEventListener('click', list_h, false);
+
+// 등록
+const add = res => {
+  if(res.header.code == '01') {
+  document.querySelector('form').reset();
+  //목록 새로고침
+  list_h();
+  } else {
+    throw new Error(`${res.header.message}`);
+  }
+}
+const add_h = e => {
+  const url = `http://localhost:9080/rest/`;
+  const payload = {
+    pname: $fields.pname.value,
+    quantity: $fields.quantity.value,
+    price: $fields.price.value,
+  };
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'content-type': 'application/json',
+    },
+    //json화 시켜서 요청 메세지로 보낸다.
+    body: JSON.stringify(payload)
+  })
+  //응답 메세지가 오면, json 형태를 js객체로 바꿔줘야 함.
+  .then(res => res.json())
+  .then(add)
+  .catch(console.error);
+};
+$btns.enroll.addEventListener('click', add_h, false);
+
+//조회
+const search = res => {
+  if(res.header.code == '01') {
+    $fields.pid.value = res.data.pid;
+    $fields.pname.value = res.data.pname;
+    $fields.quantity.value = res.data.quantity;
+    $fields.price.value = res.data.price;
+  } else {
+    throw new Error(`${res.header.message}`);
+  }
+};
+
+const search_h = (e, pid) => {
+  const url = `http://localhost:9080/rest/${pid}`;
+  fetch(url, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+    },
+  })
+  .then(res => res.json())
+  .then(search)
+  .catch(err => console.error(err));
+};
+
+const search_logic = e => {
+  const pid = $fields.pid.value.trim();
+  if(!pid) {
+    console.log('상품아이디를 입력하세요');
+    return;
+  }
+  search_h(e,pid)
+}
+
+$btns.search.addEventListener('click', search_logic, false);
+
+// 수정
+const modify = res => {
+  if(res.header.code == '01') {
+    list_h()
+  } else {
+  throw new Error(`${res.header.message}`);
+  }
+};
+const modify_h = (e,pid) => {
+  const url = `http://localhost:9080/rest/${pid}`;
+  const payload = {
+  //요청메세지 바디에 들어갈 내용
+    pname: $fields.pname.value,
+    quantity: $fields.quantity.value,
+    price: $fields.price.value,
+  };
+  fetch(url, {
+    method: 'PATCH',
+    headers: {
+      Accept: 'application/json',
+      'Content-type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+  //응답메세지처리
+  //js객체로 변화
+  .then(res => res.json())
+  //나머지처리
+  .then(modify)
+  .catch(err => console.error(err));
+};
+$btns.modify.addEventListener(
+  'click',
+  e => {
+    const pid = $fields.pid.value.trim();
+    modify_h(e, pid);
+  },
+  false,
+);
+//삭제
+const del = res => {
+  if(res.header.code == '01') {
+  //입력한 것 초기화 하기 위해
+  document.querySelector('form').reset();
+  list_h();
+  } else {
+    throw new Error(`${res.header.message}`);
+  }
+};
+const del_h = (e, pid) => {
+  const url = `http://localhost:9080/rest/${pid}`;
+  fetch(url, {
+    method: 'DELETE',
+    headers: {
+      Accept: 'application/json',
+    },
+  })
+  .then(res => res.json())
+  .then(del)
+  .catch(console.error)
+}
+const del_logic = (e) => {
+  const pid = $fields.pid.value.trim()
+  let question = confirm('삭제하시겠습니까?')
+  if(question) {
+    del_h(e, pid)
+  }
+};
+$btns.del.addEventListener(
+  'click',
+  del_logic,
+  false
+);
+</script>
+</body>
+</html>

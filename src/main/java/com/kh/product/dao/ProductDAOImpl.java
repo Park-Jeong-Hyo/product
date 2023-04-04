@@ -72,7 +72,7 @@ public class ProductDAOImpl implements ProductDAO{
     sb.append("set pname = :pname, ");
     sb.append("    quantity = :quantity, ");
     sb.append("    price = :price ");
-    sb.append("where pid = pid ");
+    sb.append("where pid = :id ");
 
     //sqlparametersource 인터페이스의 구현 mapsqlparametersource
     // beanproperty.. 은 자바 빈 규약을 따르는 map
@@ -88,7 +88,10 @@ public class ProductDAOImpl implements ProductDAO{
   @Override
   public int delete(Long pid) {
     String sql = "delete from product where pid = :id ";
-    return template.update(sql, Map.of("id", pid));
+    int result = template.update(sql, Map.of("id", pid));
+    //결과값이 1이 나오면 성공인 것을 알 수 있음.
+    log.info("result={}", result);
+    return result;
   }
 
   @Override
@@ -99,5 +102,17 @@ public class ProductDAOImpl implements ProductDAO{
 
     List<Product> list = template.query(sb.toString(), BeanPropertyRowMapper.newInstance(Product.class));
     return list;
+  }
+
+  @Override
+  public boolean isExist(Long pid) {
+    boolean isExist = false;
+    StringBuffer sql = new StringBuffer();
+    // 1아니면 0이 도출된다. 존재하면 1 없으면 0이다.
+    sql.append("select count(*) from product where pid = :pid ");
+    Map<String,Long> param = Map.of("pid", pid);
+    Integer integer = template.queryForObject(sql.toString(), param, Integer.class);
+    isExist = (integer > 0) ? true : false;
+    return isExist;
   }
 }
